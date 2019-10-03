@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcrypt");
+const methodOverride = require("method-override");
 const app = express();
 const PORT = 8080;
 
@@ -20,6 +21,8 @@ app.use(cookieSession({
   keys: ['CAITLIN'],
   maxAge: 24 * 60 * 60 * 1000,
 }));
+
+app.use(methodOverride("_method"));
 
 
 /* Below are ROUTES */
@@ -155,7 +158,7 @@ app.post("/logout", (req, res) => {
   res.redirect('/urls');
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL/delete", (req, res) => {
   const userID = req.session.user_id;
   const userUrls = urlsForUser(userID, urlDatabase);
   if (Object.keys(userUrls).includes(req.params.shortURL)) {
@@ -167,7 +170,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   const userUrls = urlsForUser(userID, urlDatabase);
   if (Object.keys(userUrls).includes(req.params.id)) {

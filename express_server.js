@@ -89,7 +89,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  currentUserIdViaCookie = req.session.user_id
+  const currentUserIdViaCookie = req.session.user_id;
   if (urlDatabase[req.params.shortURL]) {
     const longURL = urlDatabase[req.params.shortURL].longURL;
     if (cookieHasUser(currentUserIdViaCookie, users)) {
@@ -99,15 +99,15 @@ app.get("/u/:shortURL", (req, res) => {
       }
     } else {
       if (req.session.shortUrlsVisited) {
-        if (!req.session.shortUrlsVisited.includes(req.params.shortURL)){
+        if (!req.session.shortUrlsVisited.includes(req.params.shortURL)) {
           req.session.shortUrlsVisited.push(req.params.shortURL);
           urlDatabase[req.params.shortURL].uniqueClicks ++;
-        } 
+        }
       } else {
         req.session.shortUrlsVisited = [req.params.shortURL];
         urlDatabase[req.params.shortURL].uniqueClicks ++;
-        }
       }
+    }
     urlDatabase[req.params.shortURL].totalClicks ++;
     res.redirect(longURL);
   } else {

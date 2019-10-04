@@ -23,6 +23,8 @@
         <% } %>
       <h5 class="card-title">TinyURL for: <%= longURL %></h5>
       <p class="card-text">Short URL: <a href="/u/<%= shortURL %>" target="_blank"><%= shortURL %></a></p>
+      <p><b>Total Clicks:</b><%= shortURLObj.totalClicks %></p>
+      <p><b>Unique Clicks:</b><%= shortURLObj.uniqueClicks %></p>
     </div>
     <div class="card-footer text-muted">
       <h3>Edit</h3>

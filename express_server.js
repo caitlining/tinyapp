@@ -76,6 +76,7 @@ app.get("/login", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     let templateVars = {
+      shortURLObj: urlDatabase[req.params.shortURL],
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
       urlUserID: urlDatabase[req.params.shortURL].userID,
@@ -88,13 +89,27 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
+  currentUserIdViaCookie = req.session.user_id
   if (urlDatabase[req.params.shortURL]) {
     const longURL = urlDatabase[req.params.shortURL].longURL;
-    if (longURL === undefined) {
-      res.status(302);
+    if (cookieHasUser(currentUserIdViaCookie, users)) {
+      if (!users[currentUserIdViaCookie].shortUrlsVisited.includes(req.params.shortURL)) {
+        users[currentUserIdViaCookie].shortUrlsVisited.push(req.params.shortURL);
+        urlDatabase[req.params.shortURL].uniqueClicks ++;
+      }
     } else {
-      res.redirect(longURL);
-    }
+      if (req.session.shortUrlsVisited) {
+        if (!req.session.shortUrlsVisited.includes(req.params.shortURL)){
+          req.session.shortUrlsVisited.push(req.params.shortURL);
+          urlDatabase[req.params.shortURL].uniqueClicks ++;
+        } 
+      } else {
+        req.session.shortUrlsVisited = [req.params.shortURL];
+        urlDatabase[req.params.shortURL].uniqueClicks ++;
+        }
+      }
+    urlDatabase[req.params.shortURL].totalClicks ++;
+    res.redirect(longURL);
   } else {
     res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.");
   }
@@ -106,6 +121,8 @@ app.post("/urls", (req, res) => {
     urlDatabase[shortURL] = {
       longURL: req.body.longURL,
       userID: req.session.user_id,
+      totalClicks: 0,
+      uniqueClicks: 0,
     };
     res.redirect(`/urls/${shortURL}`);
   } else {
@@ -121,12 +138,23 @@ app.post("/register", (req, res) => {
     res.status(400).send("Please include both a valid email and password");
   } else if (emailHasUser(submittedEmail, users)) {
     res.status(400).send("An account already exists for this email address");
+  } else if (req.session.shortUrlsVisited) {
+    const newUserID = generateRandomString();
+    users[newUserID] = {
+      id: newUserID,
+      email: submittedEmail,
+      password: bcrypt.hashSync(submittedPassword, 10),
+      shortUrlsVisited: req.session.shortUrlsVisited
+    };
+    req.session.user_id = newUserID;
+    res.redirect("/urls");
   } else {
     const newUserID = generateRandomString();
     users[newUserID] = {
       id: newUserID,
       email: submittedEmail,
       password: bcrypt.hashSync(submittedPassword, 10),
+      shortUrlsVisited: [],
     };
     req.session.user_id = newUserID;
     res.redirect("/urls");
